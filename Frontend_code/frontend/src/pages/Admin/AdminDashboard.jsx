@@ -170,7 +170,7 @@ export default function AdminDashboard() {
               <h3 className="text-sm font-semibold text-green-100">Fines Collected</h3>
               <DollarSign size={24} className="text-green-200" />
             </div>
-            <p className="text-3xl font-bold mb-2">Rs {stats.fines}</p>
+            <p className="text-2xl md:text-3xl font-bold mb-2 truncate">Rs {stats.fines}</p>
             <p className="text-xs text-green-100">Total fines</p>
           </motion.div>
 

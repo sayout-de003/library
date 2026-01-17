@@ -86,7 +86,7 @@ export default function MemberDashboard() {
               <h3 className="text-sm font-semibold text-red-100">Total Fines Due</h3>
               <AlertCircle size={24} className="text-red-200" />
             </div>
-            <p className="text-3xl font-bold mb-2">Rs {totalFines}</p>
+            <p className="text-2xl md:text-3xl font-bold mb-2 truncate">Rs {totalFines}</p>
             {totalFines > 0 && (
               <Link
                 to="/payment"

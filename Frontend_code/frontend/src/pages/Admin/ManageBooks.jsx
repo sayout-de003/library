@@ -7,7 +7,9 @@ export default function ManageBooks() {
   const [books, setBooks] = useState([]);
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
+  const [isbn, setIsbn] = useState("");
   const [category, setCategory] = useState("");
+  const [quantity, setQuantity] = useState("");
   const [coverImage, setCoverImage] = useState(null);
   const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +37,10 @@ export default function ManageBooks() {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("author", author);
+    formData.append("isbn", isbn);
     formData.append("category", category);
+    formData.append("quantity", quantity || 0);
+    formData.append("available_quantity", quantity || 0);
     
     if (coverImage) {
       formData.append("cover_image", coverImage);
@@ -43,8 +48,15 @@ export default function ManageBooks() {
 
     try {
       if (editing) {
-        // For editing, we'll use PUT and only include cover_image if changed
-        const data = { title, author, category };
+        // For editing, we need to send all required fields
+        const data = { 
+          title, 
+          author, 
+          isbn,
+          category,
+          quantity: parseInt(quantity) || 0,
+          available_quantity: parseInt(quantity) || 0
+        };
         await api.put(`books/${editing.id}/`, data);
         setEditing(null);
       } else {
@@ -56,14 +68,16 @@ export default function ManageBooks() {
       // Reset form
       setTitle("");
       setAuthor("");
+      setIsbn("");
       setCategory("");
+      setQuantity("");
       setCoverImage(null);
       
       // Refresh book list
       fetchBooks();
     } catch (err) {
       console.error("Failed to save book:", err);
-      alert(err.response?.data?.detail || "Failed to save book");
+      alert(err.response?.data?.detail || JSON.stringify(err.response?.data) || "Failed to save book");
     }
   };
 
@@ -83,14 +97,18 @@ export default function ManageBooks() {
     setEditing(book);
     setTitle(book.title);
     setAuthor(book.author);
+    setIsbn(book.isbn || "");
     setCategory(book.category || "");
+    setQuantity(book.quantity || "");
   };
 
   const handleCancelEdit = () => {
     setEditing(null);
     setTitle("");
     setAuthor("");
+    setIsbn("");
     setCategory("");
+    setQuantity("");
     setCoverImage(null);
   };
 
@@ -103,19 +121,19 @@ export default function ManageBooks() {
   }
 
   return (
-    <div className="p-4 space-y-6">
-      <h2 className="text-2xl font-bold">Manage Books</h2>
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white p-4 space-y-6">
+      <h2 className="text-4xl font-bold">Manage Books</h2>
 
-      <form onSubmit={handleAddOrEdit} className="bg-white p-4 rounded shadow space-y-4">
-        <h3 className="font-semibold">{editing ? "Edit Book" : "Add New Book"}</h3>
+      <form onSubmit={handleAddOrEdit} className="bg-gray-800 bg-opacity-50 border border-gray-700 p-6 rounded-lg shadow space-y-4">
+        <h3 className="text-xl font-semibold text-white">{editing ? "Edit Book" : "Add New Book"}</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Title *</label>
+            <label className="block text-sm text-gray-300 mb-2">Title *</label>
             <input 
               type="text" 
               placeholder="Book Title" 
-              className="w-full border px-3 py-2 rounded"
+              className="w-full bg-gray-700 text-white border border-gray-600 px-3 py-2 rounded focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
               value={title} 
               onChange={e => setTitle(e.target.value)}
               required
@@ -123,11 +141,11 @@ export default function ManageBooks() {
           </div>
           
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Author *</label>
+            <label className="block text-sm text-gray-300 mb-2">Author *</label>
             <input 
               type="text" 
               placeholder="Author Name" 
-              className="w-full border px-3 py-2 rounded"
+              className="w-full bg-gray-700 text-white border border-gray-600 px-3 py-2 rounded focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
               value={author} 
               onChange={e => setAuthor(e.target.value)}
               required
@@ -135,26 +153,52 @@ export default function ManageBooks() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Category</label>
+            <label className="block text-sm text-gray-300 mb-2">ISBN *</label>
             <input 
               type="text" 
-              placeholder="Category" 
-              className="w-full border px-3 py-2 rounded"
-              value={category} 
-              onChange={e => setCategory(e.target.value)}
+              placeholder="ISBN (13 digits)" 
+              className="w-full bg-gray-700 text-white border border-gray-600 px-3 py-2 rounded focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+              value={isbn} 
+              onChange={e => setIsbn(e.target.value)}
+              required
             />
           </div>
           
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
+            <label className="block text-sm text-gray-300 mb-2">Category</label>
+            <input 
+              type="text" 
+              placeholder="Category" 
+              className="w-full bg-gray-700 text-white border border-gray-600 px-3 py-2 rounded focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+              value={category} 
+              onChange={e => setCategory(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-300 mb-2">Quantity *</label>
+            <input 
+              type="number" 
+              placeholder="Quantity" 
+              className="w-full bg-gray-700 text-white border border-gray-600 px-3 py-2 rounded focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+              value={quantity} 
+              onChange={e => setQuantity(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm text-gray-300 mb-2">
               {editing ? "Cover Image (leave empty to keep current)" : "Cover Image"}
             </label>
             <input 
               type="file" 
               accept="image/*"
-              className="w-full border px-3 py-2 rounded"
+              className="w-full bg-gray-700 text-gray-300 border border-gray-600 px-3 py-2 rounded focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 file:bg-red-600 file:text-white file:border-0 file:px-3 file:py-1 file:rounded file:cursor-pointer hover:file:bg-red-700"
               onChange={e => setCoverImage(e.target.files[0])}
             />
           </div>
@@ -171,7 +215,7 @@ export default function ManageBooks() {
       </form>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-500 bg-opacity-20 border border-red-500 text-red-400 px-4 py-3 rounded">
           {error}
         </div>
       )}
@@ -180,7 +224,7 @@ export default function ManageBooks() {
         {books.map(book => (
           <motion.div 
             key={book.id}
-            className="bg-white shadow rounded p-2 cursor-pointer hover:scale-105 transition-transform"
+            className="bg-gray-800 bg-opacity-50 border border-gray-700 shadow rounded p-3 cursor-pointer hover:scale-105 transition-transform"
             whileHover={{ scale: 1.05 }}
           >
             <img 
@@ -189,23 +233,23 @@ export default function ManageBooks() {
               className="w-full h-32 object-cover rounded mb-2"
               onError={(e) => { e.target.src = "/placeholder-book.svg"; }}
             />
-            <h3 className="font-semibold text-sm truncate">{book.title}</h3>
-            <p className="text-xs text-gray-500">{book.author}</p>
+            <h3 className="font-semibold text-sm truncate text-white">{book.title}</h3>
+            <p className="text-xs text-gray-300">{book.author}</p>
             {book.category && <p className="text-xs text-gray-400">{book.category}</p>}
-            <div className="mt-2 flex space-x-2">
-              <Button onClick={() => handleEdit(book)} className="bg-yellow-500 text-xs py-1">
+            <div className="mt-2 flex gap-1 w-full">
+              <button onClick={() => handleEdit(book)} className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs py-1.5 rounded font-semibold transition-colors">
                 Edit
-              </Button>
-              <Button onClick={() => handleDelete(book.id)} className="bg-red-500 text-xs py-1">
+              </button>
+              <button onClick={() => handleDelete(book.id)} className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs py-1.5 rounded font-semibold transition-colors">
                 Delete
-              </Button>
+              </button>
             </div>
           </motion.div>
         ))}
       </div>
 
       {books.length === 0 && !loading && (
-        <p className="text-center text-gray-500">No books found. Add some books to get started.</p>
+        <p className="text-center text-gray-400">No books found. Add some books to get started.</p>
       )}
     </div>
   );
